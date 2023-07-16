@@ -473,6 +473,7 @@ public class Modules extends System<Modules> {
         add(new Step());
         add(new TridentBoost());
         add(new Velocity());
+        add(new PacketFly());
     }
 
     private void initRender() {
@@ -564,8 +565,9 @@ public class Modules extends System<Modules> {
         add(new Spam());
         add(new ServerSpoof());
         add(new InventoryTweaks());
+        add(new CoordinateLogger());
     }
-
+    //TODO: fix this shit
     public static class ModuleRegistry extends SimpleRegistry<Module> {
         public ModuleRegistry() {
             super(RegistryKey.ofRegistry(new MeteorIdentifier("modules")), Lifecycle.stable());
