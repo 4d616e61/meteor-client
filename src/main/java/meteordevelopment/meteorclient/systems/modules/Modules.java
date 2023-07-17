@@ -566,6 +566,7 @@ public class Modules extends System<Modules> {
         add(new ServerSpoof());
         add(new InventoryTweaks());
         add(new CoordinateLogger());
+        add(new AutoCraft());
     }
     //TODO: fix this shit
     public static class ModuleRegistry extends SimpleRegistry<Module> {
