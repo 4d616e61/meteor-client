@@ -127,7 +127,7 @@ public class BoatFly extends Module {
             double fallDist = downMove.get();
             //boatEntity.setPos(pos.x, pos.y - fallDist, pos.z);
             //mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(pos.x, pos.y - fallDist, pos.z, mc.player.isOnGround()));
-            mc.player.networkHandler.sendPacket(createPacket(pos.x, pos.y - fallDist, pos.z, boatEntity.getYaw(), boatEntity.getPitch()));
+            //mc.player.networkHandler.sendPacket(createPacket(pos.x, pos.y - fallDist, pos.z, boatEntity.getYaw(), boatEntity.getPitch()));
             //VehicleMoveC2SPacketAccessor
 
             //Set back to original
@@ -141,13 +141,18 @@ public class BoatFly extends Module {
             event.cancel();
         }
     }
+
     @EventHandler
     private void onSendPacket(PacketEvent.Send event)
     {
-        if(antikickTimer < fallDelay.get()) return;
+        if(antikickTimer < fallDelay.get()){
+            cancelledVehicleMove = false;
+            return;
+        }
+
         if(event.packet instanceof VehicleMoveC2SPacket && usePacketAntikick.get() && !cancelledVehicleMove)
         {
-
+            antikickTimer = 0;
             VehicleMoveC2SPacket currentPacket = (VehicleMoveC2SPacket) event.packet;
             //clone a packet
             //No Mixins?
@@ -156,8 +161,9 @@ public class BoatFly extends Module {
             cancelledVehicleMove = true;
 
             event.cancel();
-
+            return;
         }
+
     }
 
     private VehicleMoveC2SPacket createPacket(double x, double y, double z, float yaw, float pitch) {
