@@ -48,6 +48,12 @@ public class Flight extends Module {
         .defaultValue(false)
         .build()
     );
+    private final Setting<Boolean> ignoreWater = sgGeneral.add(new BoolSetting.Builder()
+        .name("ignore-water")
+        .description("Make speed constant even in water")
+        .defaultValue(false)
+        .build()
+    );
 
     private final Setting<AntiKickMode> antiKickMode = sgAntiKick.add(new EnumSetting.Builder<AntiKickMode>()
         .name("mode")

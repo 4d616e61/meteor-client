@@ -13,11 +13,14 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.starscript.compiler.Expr;
 import net.minecraft.client.gui.screen.recipebook.RecipeResultCollection;
 import net.minecraft.item.Item;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.screen.CraftingScreenHandler;
+import net.minecraft.screen.PlayerScreenHandler;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 
 import java.util.Arrays;
@@ -54,6 +57,12 @@ public class AutoCraft extends Module {
         .defaultValue(false)
         .build()
     );
+    private final Setting<Boolean> handCraft = sgGeneral.add(new BoolSetting.Builder()
+        .name("Hand craft")
+        .description("Use the inventory to craft items")
+        .defaultValue(false)
+        .build()
+    );
 
     public AutoCraft() {
         super(Categories.Misc, "auto-craft", "Automatically crafts items.");
@@ -63,8 +72,14 @@ public class AutoCraft extends Module {
     private void onTick(TickEvent.Post event) {
         if (mc.interactionManager == null) return;
         if (items.get().isEmpty()) return;
+        ScreenHandler handler = mc.player.currentScreenHandler;
+        if(handCraft.get()) {
+            if (!(handler instanceof CraftingScreenHandler) && !(handler instanceof PlayerScreenHandler)) return;
+        }
+        else {
+            if (!(handler instanceof CraftingScreenHandler)) return;
+        }
 
-        if (!(mc.player.currentScreenHandler instanceof CraftingScreenHandler)) return;
 
 
         if (antiDesync.get())
@@ -72,7 +87,7 @@ public class AutoCraft extends Module {
 
         // Danke schön GhostTypes
         // https://github.com/GhostTypes/orion/blob/main/src/main/java/me/ghosttypes/orion/modules/main/AutoBedCraft.java
-        CraftingScreenHandler currentScreenHandler = (CraftingScreenHandler) mc.player.currentScreenHandler;
+        ScreenHandler currentScreenHandler = mc.player.currentScreenHandler;
         List<Item> itemList = items.get();
         List<RecipeResultCollection> recipeResultCollectionList  = mc.player.getRecipeBook().getOrderedResults();
         for (RecipeResultCollection recipeResultCollection : recipeResultCollectionList) {
