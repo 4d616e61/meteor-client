@@ -21,6 +21,7 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.System;
 import meteordevelopment.meteorclient.systems.Systems;
 import meteordevelopment.meteorclient.systems.modules.combat.*;
+import meteordevelopment.meteorclient.systems.modules.exploits.*;
 import meteordevelopment.meteorclient.systems.modules.misc.*;
 import meteordevelopment.meteorclient.systems.modules.misc.swarm.Swarm;
 import meteordevelopment.meteorclient.systems.modules.movement.*;
@@ -89,6 +90,7 @@ public class Modules extends System<Modules> {
         initRender();
         initWorld();
         initMisc();
+        initExploits();
     }
 
     @Override
@@ -565,8 +567,10 @@ public class Modules extends System<Modules> {
         add(new Spam());
         add(new ServerSpoof());
         add(new InventoryTweaks());
-        add(new CoordinateLogger());
         add(new AutoCraft());
+    }
+    private void initExploits() {
+        add(new CoordinateLogger());
     }
     //TODO: fix this shit
     public static class ModuleRegistry extends SimpleRegistry<Module> {
