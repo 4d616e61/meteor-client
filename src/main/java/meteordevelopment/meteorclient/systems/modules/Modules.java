@@ -431,7 +431,6 @@ public class Modules extends System<Modules> {
         add(new NoInteract());
         add(new NoMiningTrace());
         add(new NoRotate());
-        add(new OffhandCrash());
         add(new PacketMine());
         add(new Portals());
         add(new PotionSaver());
@@ -562,7 +561,6 @@ public class Modules extends System<Modules> {
         add(new NameProtect());
         add(new Notebot());
         add(new Notifier());
-        add(new PacketCanceller());
         add(new SoundBlocker());
         add(new Spam());
         add(new ServerSpoof());
@@ -571,6 +569,9 @@ public class Modules extends System<Modules> {
     }
     private void initExploits() {
         add(new CoordinateLogger());
+        add(new PacketCanceller());
+        add(new NoCom());
+        add(new OffhandCrash());
     }
     //TODO: fix this shit
     public static class ModuleRegistry extends SimpleRegistry<Module> {

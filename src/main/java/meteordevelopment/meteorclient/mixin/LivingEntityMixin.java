@@ -11,7 +11,7 @@ import meteordevelopment.meteorclient.events.entity.DamageEvent;
 import meteordevelopment.meteorclient.events.entity.player.CanWalkOnFluidEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFly;
-import meteordevelopment.meteorclient.systems.modules.player.OffhandCrash;
+import meteordevelopment.meteorclient.systems.modules.exploits.OffhandCrash;
 import meteordevelopment.meteorclient.systems.modules.player.PotionSpoof;
 import meteordevelopment.meteorclient.systems.modules.render.HandView;
 import meteordevelopment.meteorclient.systems.modules.render.NoRender;
