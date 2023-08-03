@@ -566,12 +566,14 @@ public class Modules extends System<Modules> {
         add(new ServerSpoof());
         add(new InventoryTweaks());
         add(new AutoCraft());
+        add(new AutoLogin());
     }
     private void initExploits() {
         add(new CoordinateLogger());
         add(new PacketCanceller());
         add(new NoCom());
         add(new OffhandCrash());
+        add(new OldSpawnTP());
     }
     //TODO: fix this shit
     public static class ModuleRegistry extends SimpleRegistry<Module> {
