@@ -8,7 +8,9 @@ package meteordevelopment.meteorclient.utils.network;
 import com.google.common.collect.Iterators;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Lifecycle;
+import io.netty.buffer.Unpooled;
 import meteordevelopment.meteorclient.utils.misc.MeteorIdentifier;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
@@ -402,6 +404,14 @@ public class PacketUtils {
         return C2S_PACKETS.keySet();
     }
 
+    public static int getPacketSize(Packet<?> packet)
+    {
+        PacketByteBuf byteBuf = new PacketByteBuf(Unpooled.buffer());
+        packet.write(byteBuf);
+        //SHOULD work
+        return byteBuf.writerIndex();
+    }
+
     private static class PacketRegistry extends SimpleRegistry<Class<? extends Packet<?>>> {
         public PacketRegistry() {
             super(RegistryKey.ofRegistry(new MeteorIdentifier("packets")), Lifecycle.stable());
@@ -538,5 +548,7 @@ public class PacketUtils {
         public Set<RegistryKey<Class<? extends Packet<?>>>> getKeys() {
             return null;
         }
+
+
     }
 }
