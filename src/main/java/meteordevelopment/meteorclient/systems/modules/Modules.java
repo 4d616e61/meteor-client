@@ -554,7 +554,6 @@ public class Modules extends System<Modules> {
         add(new BetterBeacons());
         add(new BetterChat());
         add(new BetterTab());
-        add(new BookBot());
         add(new DiscordPresence());
         add(new MessageAura());
         add(new MiddleClickFriend());
@@ -575,6 +574,8 @@ public class Modules extends System<Modules> {
         add(new OffhandCrash());
         add(new OldSpawnTP());
         add(new PacketLogger());
+        add(new BookBot());
+        add(new CustomPayloadSender());
     }
     //TODO: fix this shit
     public static class ModuleRegistry extends SimpleRegistry<Module> {
