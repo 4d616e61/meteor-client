@@ -66,7 +66,7 @@ public class PacketFly extends Module {
     );
 
     public PacketFly() {
-        super(Categories.Movement, "PacketFly", "Courtesy to BleachDev");
+        super(Categories.Movement, "packet-fly", "Courtesy to BleachDev");
     }
 
     public enum Mode{
