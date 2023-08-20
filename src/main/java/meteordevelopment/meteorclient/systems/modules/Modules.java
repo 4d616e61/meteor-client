@@ -475,6 +475,7 @@ public class Modules extends System<Modules> {
         add(new TridentBoost());
         add(new Velocity());
         add(new PacketFly());
+        add(new ElytraRecast());
     }
 
     private void initRender() {

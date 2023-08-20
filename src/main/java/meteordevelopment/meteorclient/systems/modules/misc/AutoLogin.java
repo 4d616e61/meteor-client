@@ -6,7 +6,7 @@
 package meteordevelopment.meteorclient.systems.modules.misc;
 
 import meteordevelopment.meteorclient.MeteorClient;
-import meteordevelopment.meteorclient.events.world.ConnectToServerEvent;
+
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -35,15 +35,15 @@ public class AutoLogin extends Module {
         super(Categories.Misc, "auto-login", "Automatically executes /login when connected to a server.");
     }
 
-    @EventHandler
-    private void onGameJoined(ConnectToServerEvent event) {
-        if(autoRegister.get())
-        {
-            ChatUtils.sendPlayerMsg("/register " + loginPw);
-
-        }
-        ChatUtils.sendPlayerMsg("/login " + loginPw);
-    }
-
+//    @EventHandler
+//    private void onGameJoined(ConnectToServerEvent event) {
+//        if(autoRegister.get())
+//        {
+//            ChatUtils.sendPlayerMsg("/register " + loginPw);
+//
+//        }
+//        ChatUtils.sendPlayerMsg("/login " + loginPw);
+//    }
+//
 
 }
