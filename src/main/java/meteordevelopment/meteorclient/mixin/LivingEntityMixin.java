@@ -10,7 +10,6 @@ import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.entity.DamageEvent;
 import meteordevelopment.meteorclient.events.entity.player.CanWalkOnFluidEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.systems.modules.movement.ElytraRecast;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFly;
 import meteordevelopment.meteorclient.systems.modules.exploits.OffhandCrash;
 import meteordevelopment.meteorclient.systems.modules.player.PotionSpoof;
@@ -115,15 +114,5 @@ public abstract class LivingEntityMixin extends Entity {
         if (Modules.get().get(PotionSpoof.class).shouldBlock(effect)) return false;
 
         return original;
-    }
-    @Inject(method = "isFallFlying", at = @At("TAIL"), cancellable = true)
-    private void onIsFallFlying(CallbackInfoReturnable<Boolean> cbBool)
-    {
-        if ((Object) this != mc.player)
-            return;
-        if(!Modules.get().get(ElytraRecast.class).doUpdateFallFlying())
-            return;
-        cbBool.setReturnValue(Modules.get().get(ElytraRecast.class).recastIfLanded(cbBool.getReturnValue()));
-
     }
 }
