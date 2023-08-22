@@ -566,7 +566,6 @@ public class Modules extends System<Modules> {
         add(new ServerSpoof());
         add(new InventoryTweaks());
         add(new AutoCraft());
-        add(new AutoLogin());
     }
     private void initExploits() {
         add(new AntiXrayBypass());
