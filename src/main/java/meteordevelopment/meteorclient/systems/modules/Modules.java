@@ -570,14 +570,15 @@ public class Modules extends System<Modules> {
         add(new AutoLogin());
     }
     private void initExploits() {
+        add(new AntiXrayBypass());
+        add(new BookBot());
         add(new CoordinateLogger());
-        add(new PacketCanceller());
-        add(new NoCom());
+        add(new CustomPayloadSender());
         add(new OffhandCrash());
         add(new OldSpawnTP());
+        add(new PacketCanceller());
         add(new PacketLogger());
-        add(new BookBot());
-        add(new CustomPayloadSender());
+
     }
     //TODO: fix this shit
     public static class ModuleRegistry extends SimpleRegistry<Module> {
