@@ -30,7 +30,7 @@ public class UnchokeCommand extends Command {
 
     }
     public UnchokeCommand() {
-        super("bind", "Unchokes all choked packets in PacketChoker");
+        super("unchoke", "Unchokes all choked packets in PacketChoker");
     }
     @Override
     public void build(LiteralArgumentBuilder<CommandSource> builder) {
