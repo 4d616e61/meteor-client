@@ -55,7 +55,7 @@ public class AntiPacketKick extends Module {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
-    private void onSendPacket(PacketEvent.Receive event) {
+    private void onSendPacket(PacketEvent.Send event) {
         if(!cancelOversized.get()) return;
         if (getPacketSize(event.packet) >= 0x200000) event.cancel();
     }
