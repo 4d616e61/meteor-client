@@ -21,8 +21,14 @@ import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Stream;
+
+import static meteordevelopment.meteorclient.utils.player.ChatUtils.error;
 
 public class PacketUtils {
     public static final Registry<Class<? extends Packet<?>>> REGISTRY = new PacketRegistry();
@@ -557,5 +563,34 @@ public class PacketUtils {
         }
 
 
+    }
+    public static String packetToString(Packet<?> packet) {
+        String packetName = PacketUtils.getName((Class<? extends Packet<?>>) packet.getClass());
+
+        try {
+            StringJoiner values = new StringJoiner(", ", "[", "]");
+            Class<?> clazz = packet.getClass();
+
+            // needed
+            while (clazz.getDeclaredFields().length == 0 && packet.getClass().getSuperclass() != null) {
+                clazz = packet.getClass().getSuperclass();
+            }
+
+            for (Field f : clazz.getDeclaredFields()) {
+                if (Modifier.isFinal(f.getModifiers()) && Modifier.isStatic(f.getModifiers()))
+                    continue; // constant
+
+                if (!f.canAccess(packet))
+                    f.setAccessible(true);
+
+                @Nullable Object value = f.get(Modifier.isStatic(f.getModifiers()) ? null : packet);
+                values.add(Objects.toString(value));
+            }
+
+            return String.join(" ", packetName, values.toString());
+        } catch (Exception e) {
+            error("Cannot construct packet values string", e);
+            return packetName;
+        }
     }
 }
