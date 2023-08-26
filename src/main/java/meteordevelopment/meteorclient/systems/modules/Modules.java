@@ -573,7 +573,7 @@ public class Modules extends System<Modules> {
         add(new CoordinateLogger());
         add(new CustomPayloadSender());
         add(new OffhandCrash());
-        add(new OldSpawnTP());
+        add(new PacketChoker());
         add(new PacketCanceller());
         add(new PacketLogger());
 
