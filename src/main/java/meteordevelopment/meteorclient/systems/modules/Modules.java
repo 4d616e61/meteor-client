@@ -566,6 +566,7 @@ public class Modules extends System<Modules> {
         add(new ServerSpoof());
         add(new InventoryTweaks());
         add(new AutoCraft());
+        add(new ToggleBaritone());
     }
     private void initExploits() {
         add(new AntiXrayBypass());
@@ -576,6 +577,7 @@ public class Modules extends System<Modules> {
         add(new PacketChoker());
         add(new PacketCanceller());
         add(new PacketLogger());
+        
 
     }
     //TODO: fix this shit
