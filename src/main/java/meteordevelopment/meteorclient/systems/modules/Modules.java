@@ -475,6 +475,7 @@ public class Modules extends System<Modules> {
         add(new TridentBoost());
         add(new Velocity());
         add(new PacketFly());
+        add(new AutoHighwayElytrafly());
     }
 
     private void initRender() {
@@ -577,7 +578,6 @@ public class Modules extends System<Modules> {
         add(new PacketChoker());
         add(new PacketCanceller());
         add(new PacketLogger());
-        
 
     }
     //TODO: fix this shit
