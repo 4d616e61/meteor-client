@@ -28,7 +28,7 @@ public class AutoHighwayElytrafly extends Module {
         PlayerRotation,
         Manual
     }
-
+    //region UISettings
     public AutoHighwayElytrafly() {
         super(Categories.Movement, "auto-highway-elytrafly", "Automatically unstucks yourself when travelling on highways");
     }
@@ -136,7 +136,7 @@ public class AutoHighwayElytrafly extends Module {
         .visible(() -> rotationLockModeSetting.get() == RotationLockMode.Manual)
         .build()
     );
-
+    //endregion
 
     private LinkedList<Vec3d> posHistory = new LinkedList<>();
     private ElytraFly eflyModule = Modules.get().get(ElytraFly.class);
@@ -168,7 +168,18 @@ public class AutoHighwayElytrafly extends Module {
         //--
         new Vec3d(-1,0, -1)
     };
-    //util functions
+    //region Misc
+    private void lockRotation(){
+        switch (rotationLockModeSetting.get()){
+            case Manual -> mc.player.setYaw(manualRotationYaw.get().floatValue());
+            case Position -> mc.player.setYaw((float) Math.atan2(axisVec.x, axisVec.z) + 90);
+            case PlayerRotation -> mc.player.setYaw(Math.round((mc.player.getYaw() + 1f) / 45f) * 45f);
+        }
+
+    }
+    //endregion
+
+    //region Utils
     private Vec3d zeroYComponent(Vec3d v){
         return new Vec3d(v.x, 0, v.z);
     }
@@ -191,6 +202,23 @@ public class AutoHighwayElytrafly extends Module {
         return BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing();
     }
 
+    private double distFromHighway(Vec3d highwayVecOrig){
+        //prob should use vec2d but whatevs
+        Vec3d highwayVec = zeroYComponent(highwayVecOrig).normalize();
+        Vec3d playerPos = zeroYComponent(mc.player.getPos());
+        //take dot product between the 2
+        double dot = highwayVec.dotProduct(playerPos);
+        //see diagram here: https://cdn.discordapp.com/attachments/1147380012752842773/1147381068366880809/image.png
+        double dist = Math.sqrt(playerPos.lengthSquared() - Math.pow(dot, 2));
+
+        info("dist from " + highwayVecOrig.toString() + " is " + String.valueOf(dist));
+
+        return dist;
+
+    }
+    //endregion
+
+    //region StuckChecks
     private void checkStuckVelocity() {
         if (mc.player.getVelocity().length() < stuckVelocity.get()) {
             velocityBelowThresholdTicks++;
@@ -232,57 +260,63 @@ public class AutoHighwayElytrafly extends Module {
             }
         }
     }
+    //endregion
+
 
 
     private void checkStuck() {
-        boolean lastStuckState = playerIsStuck;
         checkStuckPosition();
         checkStuckVelocity();
         checkPlayerPosBounds();
-        if (playerIsStuck && !lastStuckState)
-            info("Player is stuck. Resolving...");
-
     }
     private void resetStuckDetection(){
         posHistory.clear();
         velocityBelowThresholdTicks = 0;
     }
 
+    private Vec3d getUnstuckTarget(){
+        //detect mode
+        Vec3d target = new Vec3d(mc.player.getX(), yTarget.get(), mc.player.getZ());
+        Vec3d dirVec = new Vec3d(0,0,0);
+
+        double moveScalar = unstuckMoveDistance.get();
+        if(isDiagonal){
+            moveScalar = mc.player.getX() > 0 ? moveScalar : -moveScalar;
+
+            //pick an arbitrary horizontal pos
+            double xTarget = mc.player.getX() + moveScalar;
+            //in this case highway vec should also be properly initialized
+            //See if z is opposite
+            double zTarget = xTarget * axisVec.x * axisVec.z;
+            target = new Vec3d(xTarget, yTarget.get(), zTarget);
+
+        }
+        else {
+            //TODO: handle case of going TO spawn
+            if(lockedAxis == LockedAxis.X){
+                moveScalar = mc.player.getZ() > 0 ? moveScalar : -moveScalar;
+                target = new Vec3d(lockedX, yTarget.get(), mc.player.getZ() + moveScalar);
+            }
+            else{
+                moveScalar = mc.player.getX() > 0 ? moveScalar : -moveScalar;
+                target = new Vec3d(mc.player.getX() + moveScalar, yTarget.get(), lockedZ);
+            }
+
+        }
+        return target;
+    }
+
     private void resolveStuck() {
         toggleEfly(false);
         if(!startedUnstuck){
-            //detect mode
-            Vec3d target = new Vec3d(mc.player.getX(), yTarget.get(), mc.player.getZ());
-            Vec3d dirVec = new Vec3d(0,0,0);
-
-            double moveScalar = unstuckMoveDistance.get();
-            if(isDiagonal){
-                moveScalar = mc.player.getX() > 0 ? moveScalar : -moveScalar;
-
-                //pick an arbitrary horizontal pos
-                double xTarget = mc.player.getX() + moveScalar;
-                //in this case highway vec should also be properly initialized
-                //See if z is opposite
-                double zTarget = xTarget * axisVec.x * axisVec.z;
-                target = new Vec3d(xTarget, yTarget.get(), zTarget);
-
-            }
-            else {
-                //TODO: handle case of going TO spawn
-                if(lockedAxis == LockedAxis.X){
-                    moveScalar = mc.player.getZ() > 0 ? moveScalar : -moveScalar;
-                    target = new Vec3d(lockedX, yTarget.get(), mc.player.getZ() + moveScalar);
-                }
-                else{
-                    moveScalar = mc.player.getX() > 0 ? moveScalar : -moveScalar;
-                    target = new Vec3d(mc.player.getX() + moveScalar, yTarget.get(), lockedZ);
-                }
-
-            }
+            info("Player is stuck. Resolving...");
+            Vec3d target = getUnstuckTarget();
             baritoneGoto(target);
-            startedUnstuck = false;
+            startedUnstuck = true;
         }
+        //unstuck ended
         if(!baritoneIsPathing()){
+            startedUnstuck = false;
             playerIsStuck = false;
             toggleEfly(true);
             resetStuckDetection();
@@ -290,27 +324,6 @@ public class AutoHighwayElytrafly extends Module {
 
     }
 
-
-
-    private double distFromHighway(Vec3d highwayVecOrig){
-        //prob should use vec2d but whatevs
-        Vec3d highwayVec = zeroYComponent(highwayVecOrig).normalize();
-        Vec3d playerPos = zeroYComponent(mc.player.getPos());
-        //take dot product between the 2
-        double dot = highwayVec.dotProduct(playerPos);
-        //see diagram here: https://cdn.discordapp.com/attachments/1147380012752842773/1147381068366880809/image.png
-        return Math.sqrt(playerPos.lengthSquared() - Math.pow(dot, 2));
-
-    }
-
-    private void lockRotation(){
-        switch (rotationLockModeSetting.get()){
-            case Manual -> mc.player.setYaw(manualRotationYaw.get().floatValue());
-            case Position -> mc.player.setYaw((float) Math.atan2(axisVec.x, axisVec.z) + 90);
-            case PlayerRotation -> mc.player.setYaw(Math.round((mc.player.getYaw() + 1f) / 45f) * 45f);
-        }
-
-    }
 
     //for HORIZONTAL HIGHWAYS ONLY
     private LockedAxis getLockedAxis(Vec3d dir){
@@ -381,6 +394,7 @@ public class AutoHighwayElytrafly extends Module {
             resolveStuck();
             return;
         }
+        toggleEfly(true);
         checkStuck();
 
     }
