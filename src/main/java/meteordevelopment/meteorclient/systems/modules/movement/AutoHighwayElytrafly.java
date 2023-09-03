@@ -420,6 +420,7 @@ public class AutoHighwayElytrafly extends Module {
     @Override
     public void onActivate() {
         recalcHighway();
+        resetStuckDetection();
     }
 
     @Override
