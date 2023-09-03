@@ -154,6 +154,7 @@ public class AutoHighwayElytrafly extends Module {
     private int lockedZ = lockZSetting.get();
     private Vec3d axisVec = new Vec3d(1,0,0);
     private boolean isDiagonal = false;
+    private boolean executedCommand = false;
 
     private final Vec3d[] nondiags = {
         //x+
@@ -211,7 +212,7 @@ public class AutoHighwayElytrafly extends Module {
     }
 
     private boolean baritoneIsPathing() {
-        return BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().getGoal() != null;
+        return BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing();
     }
 
     private void baritoneStop(){
@@ -297,43 +298,30 @@ public class AutoHighwayElytrafly extends Module {
 
 
     //TODO: fix thing below
-    //region pleasefixthisthing
-    private Vec3d getUnstuckTarget_needsfixing(){
+    private Vec3d getUnstuckTargetWithLockedCoordinates(){
         //detect mode
         Vec3d target = new Vec3d(mc.player.getX(), yTarget.get(), mc.player.getZ());
         Vec3d dirVec = new Vec3d(0,0,0);
 
         double moveScalar = unstuckMoveDistance.get();
-        if(isDiagonal){
+
+
+        //TODO: handle case of going TO spawn
+        if(lockedAxis == LockedAxis.X){
+            moveScalar = mc.player.getZ() > 0 ? moveScalar : -moveScalar;
+            target = new Vec3d(lockedX, yTarget.get(), mc.player.getZ() + moveScalar);
+        }
+        else{
             moveScalar = mc.player.getX() > 0 ? moveScalar : -moveScalar;
-
-            //pick an arbitrary horizontal pos
-            double xTarget = mc.player.getX() + moveScalar;
-            //in this case highway vec should also be properly initialized
-            //See if z is opposite
-            double zTarget = xTarget * axisVec.x * axisVec.z;
-            target = new Vec3d(xTarget, yTarget.get(), zTarget);
-
+            target = new Vec3d(mc.player.getX() + moveScalar, yTarget.get(), lockedZ);
         }
-        else {
-            //TODO: handle case of going TO spawn
-            if(lockedAxis == LockedAxis.X){
-                moveScalar = mc.player.getZ() > 0 ? moveScalar : -moveScalar;
-                target = new Vec3d(lockedX, yTarget.get(), mc.player.getZ() + moveScalar);
-            }
-            else{
-                moveScalar = mc.player.getX() > 0 ? moveScalar : -moveScalar;
-                target = new Vec3d(mc.player.getX() + moveScalar, yTarget.get(), lockedZ);
-            }
 
-        }
+
         return target;
     }
-    //endregion
-
 
     //This only works with automatic highway detection
-    private Vec3d getUnstuckTarget(){
+    private Vec3d getUnstuckTargetWithAxis() {
         double spawnDistOnAxis = Math.max(Math.abs(mc.player.getX()), Math.abs(mc.player.getZ()));
         //^not actual geometric dist from spawn
         //scale vec with that thing
@@ -342,20 +330,32 @@ public class AutoHighwayElytrafly extends Module {
 
     }
 
+
+    private Vec3d getUnstuckTarget(){
+        if(detectHighway.get())
+            return getUnstuckTargetWithAxis();
+        return getUnstuckTargetWithLockedCoordinates();
+
+
+    }
+
     private void resolveStuck() {
         toggleEfly(false);
+        if(mc.player.isFallFlying())
+            return;
+
         if(baritoneIsPathing())
             startedUnstuck = true;
 
         if(!startedUnstuck){
-            info("Player is stuck. Resolving...");
+
             //wait until efly stops
-            if(mc.player.isFallFlying())
-                return;
-
-            Vec3d target = getUnstuckTarget();
-            baritoneGoto(target);
-
+            if(!executedCommand){
+                info("Player is stuck. Resolving...");
+                Vec3d target = getUnstuckTarget();
+                baritoneGoto(target);
+                executedCommand = true;
+            }
 
         }
         //unstuck ended
@@ -363,6 +363,7 @@ public class AutoHighwayElytrafly extends Module {
             info("Player stuck resolved.");
             startedUnstuck = false;
             playerIsStuck = false;
+            executedCommand = false;
             toggleEfly(true);
             resetStuckDetection();
         }
