@@ -14,16 +14,23 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFly;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.EnumMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 
 public class AutoHighwayElytrafly extends Module {
-    public enum LockedAxis {
-        X,
-        Z
+    public enum HighwayAxis{
+        XPlus,
+        XMinus,
+        ZPlus,
+        ZMinus,
+        XPlusZPlus,
+        XPlusZMinus,
+        XMinusZPlus,
+        XMinusZMinus
     }
     public enum RotationLockMode{
         Position,
@@ -37,6 +44,7 @@ public class AutoHighwayElytrafly extends Module {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     private final Setting<Boolean> detectHighway = sgGeneral.add(new BoolSetting.Builder()
         .name("detect-highway")
         .description("Whether to automatically detect highways.")
@@ -44,28 +52,33 @@ public class AutoHighwayElytrafly extends Module {
         .build()
     );
 
-    public final Setting<LockedAxis> lockedAxisSetting = sgGeneral.add(new EnumSetting.Builder<LockedAxis>()
-        .name("axis")
-        .description("The axis to lock to.")
-        .defaultValue(LockedAxis.X)
+    private final Setting<Boolean> headToOrigin = sgGeneral.add(new BoolSetting.Builder()
+        .name("to-origin")
+        .description("Whether to head to origin or not.")
+        .defaultValue(false)
+        .build()
+    );
+
+    public final Setting<HighwayAxis> highwayAxisSetting = sgGeneral.add(new EnumSetting.Builder<HighwayAxis>()
+        .name("highway-axis")
+        .description("The direction of the highway(Note that these are directions, NOT actual highways)")
+        .defaultValue(HighwayAxis.XPlus)
         .visible(() -> !detectHighway.get())
         .build()
     );
 
-    private final Setting<Integer> lockXSetting = sgGeneral.add(new IntSetting.Builder()
-        .name("locked-x")
-        .description("X coordinates to lock to.")
+    private final Setting<Integer> xOriginSetting = sgGeneral.add(new IntSetting.Builder()
+        .name("x-origin")
+        .description("X coordinates of highway origin.")
         .defaultValue(0)
         .sliderRange(-100000, 100000)
-        .visible(() -> (!detectHighway.get()) && lockedAxisSetting.get() == LockedAxis.X)
         .build()
     );
-    private final Setting<Integer> lockZSetting = sgGeneral.add(new IntSetting.Builder()
-        .name("locked-z")
-        .description("Z coordinates to lock to.")
+    private final Setting<Integer> zOriginSetting = sgGeneral.add(new IntSetting.Builder()
+        .name("z-origin")
+        .description("Z coordinates of highway origin.")
         .defaultValue(0)
         .sliderRange(-100000, 100000)
-        .visible(() -> (!detectHighway.get()) && lockedAxisSetting.get() == LockedAxis.Z)
         .build()
     );
     private final Setting<Integer> yTarget = sgGeneral.add(new IntSetting.Builder()
@@ -149,9 +162,10 @@ public class AutoHighwayElytrafly extends Module {
     private boolean playerIsStuck = false;
     private boolean startedUnstuck = false;
     private int velocityBelowThresholdTicks = 0;
-    private LockedAxis lockedAxis = LockedAxis.X;
-    private int lockedX = lockXSetting.get();
-    private int lockedZ = lockZSetting.get();
+
+    private int xOrigin = 0;
+    private int zOrigin = 0;
+
     private Vec3d axisVec = new Vec3d(1,0,0);
     private boolean isDiagonal = false;
     private boolean executedCommand = false;
@@ -169,20 +183,34 @@ public class AutoHighwayElytrafly extends Module {
     private final Vec3d[] diags = {
         //++
         new Vec3d(1,0, 1),
-        //-+
-        new Vec3d(-1,0, 1),
         //+-
         new Vec3d(1,0, -1),
+        //-+
+        new Vec3d(-1,0, 1),
         //--
         new Vec3d(-1,0, -1)
     };
+
+    public final Map<HighwayAxis, Vec3d> directionVecs = new EnumMap<>(Map.ofEntries(
+        Map.entry(HighwayAxis.XPlus,            new Vec3d(1,0, 0)),
+        Map.entry(HighwayAxis.XMinus,           new Vec3d(-1,0, 0)),
+        Map.entry(HighwayAxis.ZPlus,            new Vec3d(0,0, 1)),
+        Map.entry(HighwayAxis.ZMinus,           new Vec3d(0,0, -1)),
+        Map.entry(HighwayAxis.XPlusZPlus,       new Vec3d(1,0, 1)),
+        Map.entry(HighwayAxis.XPlusZMinus,      new Vec3d(1,0, -1)),
+        Map.entry(HighwayAxis.XMinusZPlus,      new Vec3d(-1,0, 1)),
+        Map.entry(HighwayAxis.XMinusZMinus,     new Vec3d(-1,0, -1))
+
+    ));
+
+
     //endregion
 
     //region Misc
     private void lockRotation(){
         switch (rotationLockModeSetting.get()){
             case Manual -> mc.player.setYaw(manualRotationYaw.get().floatValue());
-            case Position -> mc.player.setYaw((float) Math.toDegrees(Math.atan2(axisVec.z, axisVec.x)) - 90);
+            case Position -> mc.player.setYaw((float) Math.toDegrees(Math.atan2(axisVec.z, axisVec.x)) - 90 + (headToOrigin.get() ? 180 : 0));
             case PlayerRotation -> mc.player.setYaw(Math.round((mc.player.getYaw() + 1f) / 45f) * 45f);
             case None -> {
                 return;
@@ -190,7 +218,10 @@ public class AutoHighwayElytrafly extends Module {
         }
 
     }
+
     //endregion
+
+
 
     //region Utils
     private Vec3d zeroYComponent(Vec3d v){
@@ -222,8 +253,8 @@ public class AutoHighwayElytrafly extends Module {
     private double distFromHighway(Vec3d highwayVecOrig){
         //prob should use vec2d but whatevs
         Vec3d highwayVec = zeroYComponent(highwayVecOrig).normalize();
-        Vec3d playerPos = zeroYComponent(mc.player.getPos());
-        //take dot product between the 2]]
+        Vec3d playerPos = zeroYComponent(mc.player.getPos().subtract(xOrigin, 0, zOrigin));
+        //take dot product between the 2
         double dot = highwayVec.dotProduct(playerPos);
         //see diagram here: https://cdn.discordapp.com/attachments/1147380012752842773/1147381068366880809/image.png
         //if dp is negative then the closest would just be to origin
@@ -234,6 +265,12 @@ public class AutoHighwayElytrafly extends Module {
 
         return Math.sqrt(playerPos.lengthSquared() - Math.pow(dot, 2));
 
+    }
+    private boolean isDiagonal(HighwayAxis axis){
+        return isDiagonal(directionVecs.get(axis));
+    }
+    private boolean isDiagonal(Vec3d vec){
+        return (vec.x != 0 && vec.z != 0);
     }
     //endregion
 
@@ -266,22 +303,8 @@ public class AutoHighwayElytrafly extends Module {
             return true;
         if(mc.player.getY() > yTarget.get() + yMaxPosDelta.get())
             return true;
-        double delta;
 
-        //horizontal bounds
-        if(detectHighway.get()){
-            delta = distFromHighway(axisVec);
-        }
-        else{
-            if(lockedAxis == LockedAxis.X){
-                delta = getAbsDelta(lockedX, mc.player.getX());
-            }else{
-                delta = getAbsDelta(lockedZ, mc.player.getZ());
-            }
-        }
-        if(delta > horizontalMaxDelta.get())
-            return true;
-        return false;
+        return (distFromHighway(axisVec) > horizontalMaxDelta.get());
     }
     //endregion
 
@@ -297,47 +320,18 @@ public class AutoHighwayElytrafly extends Module {
     }
 
 
-    //TODO: fix thing below
-    private Vec3d getUnstuckTargetWithLockedCoordinates(){
-        //detect mode
-        Vec3d target = new Vec3d(mc.player.getX(), yTarget.get(), mc.player.getZ());
-        Vec3d dirVec = new Vec3d(0,0,0);
-
-        double moveScalar = unstuckMoveDistance.get();
-
-
-        //TODO: handle case of going TO spawn
-        if(lockedAxis == LockedAxis.X){
-            moveScalar = mc.player.getZ() > 0 ? moveScalar : -moveScalar;
-            target = new Vec3d(lockedX, yTarget.get(), mc.player.getZ() + moveScalar);
-        }
-        else{
-            moveScalar = mc.player.getX() > 0 ? moveScalar : -moveScalar;
-            target = new Vec3d(mc.player.getX() + moveScalar, yTarget.get(), lockedZ);
-        }
-
-
-        return target;
-    }
 
     //This only works with automatic highway detection
-    private Vec3d getUnstuckTargetWithAxis() {
+    private Vec3d getUnstuckTarget() {
         double spawnDistOnAxis = Math.max(Math.abs(mc.player.getX()), Math.abs(mc.player.getZ()));
         //^not actual geometric dist from spawn
         //scale vec with that thing
-        Vec3d res = axisVec.multiply(spawnDistOnAxis + unstuckMoveDistance.get());
+        Vec3d res = axisVec.multiply(spawnDistOnAxis + (unstuckMoveDistance.get() * (headToOrigin.get() ? -1 : 1)));
         return res.add(0, yTarget.get(), 0);
 
     }
 
 
-    private Vec3d getUnstuckTarget(){
-        if(detectHighway.get())
-            return getUnstuckTargetWithAxis();
-        return getUnstuckTargetWithLockedCoordinates();
-
-
-    }
 
     private void resolveStuck() {
         toggleEfly(false);
@@ -356,6 +350,7 @@ public class AutoHighwayElytrafly extends Module {
                 baritoneGoto(target);
                 executedCommand = true;
             }
+            return;
 
         }
         //unstuck ended
@@ -371,58 +366,38 @@ public class AutoHighwayElytrafly extends Module {
     }
 
 
-    //for HORIZONTAL HIGHWAYS ONLY
-    private LockedAxis getLockedAxis(Vec3d dir){
-        return dir.x == 0 ? LockedAxis.X : LockedAxis.Z;
-    }
-    private void checkHighway() {
+
+    //Returns the guessed highway direction vector
+    private Vec3d checkHighway() {
         double recordLength = Double.MAX_VALUE;
-
-        //check nondiags
-        for (Vec3d curVec : nondiags) {
+        //placeholder, can and should be replaced
+        Vec3d highwayVec = directionVecs.get(HighwayAxis.XPlus);
+        for(Vec3d curVec : directionVecs.values()){
             double curLen = distFromHighway(curVec);
             if (curLen < recordLength) {
                 recordLength = curLen;
-                axisVec = curVec;
-                lockedAxis = getLockedAxis(curVec);
-            }
-
-        }
-        for(Vec3d curVec : diags) {
-            double curLen = distFromHighway(curVec);
-            if (curLen < recordLength) {
-                recordLength = curLen;
-                axisVec = curVec;
-                isDiagonal = true;
+                highwayVec = curVec;
             }
         }
+        return highwayVec;
 
     }
 
 
     private void recalcHighway(){
         Vec3d playerPos = mc.player.getPos();
-        if(zeroYComponent(mc.player.getPos()).length() < 0) {
-            info("Please move at least 100 blocks away from spawn.");
-            toggle();
-        }
-        if(detectHighway.get()){
-            lockedX = 0;
-            lockedZ = 0;
-            //auto set highway
-            checkHighway();
+//        if(zeroYComponent(mc.player.getPos()).length() < 0) {
+//            info("Please move at least 100 blocks away from spawn.");
+//            toggle();
+//        }
+        xOrigin = xOriginSetting.get();
+        zOrigin = zOriginSetting.get();
+        if(detectHighway.get())
+            axisVec = checkHighway();
+        else
+            axisVec = directionVecs.get(highwayAxisSetting.get());
 
-        }
-        else {
-            //manual set highway
-            lockedX = lockXSetting.get();
-            lockedZ = lockZSetting.get();
-            lockedAxis = lockedAxisSetting.get();
-            isDiagonal = false;
-            //NOTE: this is intentionally broken
-            axisVec = new Vec3d(1,0,0);
 
-        }
         info("Currently on highway dir: " + axisVec.toString());
     }
 
