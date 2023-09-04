@@ -158,7 +158,7 @@ public class AutoHighwayElytrafly extends Module {
 
     //region Vars
     private LinkedList<Vec3d> posHistory = new LinkedList<>();
-    private ElytraFly eflyModule = Modules.get().get(ElytraFly.class);
+    private final ElytraFly eflyModule = Modules.get().get(ElytraFly.class);
     private boolean playerIsStuck = false;
     private boolean startedUnstuck = false;
     private int velocityBelowThresholdTicks = 0;
@@ -167,7 +167,6 @@ public class AutoHighwayElytrafly extends Module {
     private int zOrigin = 0;
 
     private Vec3d axisVec = new Vec3d(1,0,0);
-    private boolean isDiagonal = false;
     private boolean executedCommand = false;
 
     private final Vec3d[] nondiags = {
@@ -319,6 +318,14 @@ public class AutoHighwayElytrafly extends Module {
         velocityBelowThresholdTicks = 0;
     }
 
+    private void resetAll(){
+        resetStuckDetection();
+        startedUnstuck = false;
+        playerIsStuck = false;
+        executedCommand = false;
+
+    }
+
 
 
     //This only works with automatic highway detection
@@ -427,6 +434,7 @@ public class AutoHighwayElytrafly extends Module {
     public void onDeactivate(){
         baritoneStop();
         toggleEfly(false);
+        resetAll();
     }
 
 
