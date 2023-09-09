@@ -558,7 +558,6 @@ public class Modules extends System<Modules> {
         add(new BetterTab());
         add(new DiscordPresence());
         add(new MessageAura());
-        add(new MiddleClickFriend());
         add(new NameProtect());
         add(new Notebot());
         add(new Notifier());
