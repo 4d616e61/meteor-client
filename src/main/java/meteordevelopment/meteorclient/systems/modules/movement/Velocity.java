@@ -16,7 +16,10 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 
 public class Velocity extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -125,6 +128,12 @@ public class Velocity extends Module {
         .defaultValue(false)
         .build()
     );
+    public final Setting<Boolean> grimBypass = sgGeneral.add(new BoolSetting.Builder()
+            .name("grim-bypass")
+            .description("Bypasses grim ac")
+            .defaultValue(false)
+            .build()
+    );
 
     public Velocity() {
         super(Categories.Movement, "velocity", "Prevents you from being moved by external forces.");
@@ -150,6 +159,7 @@ public class Velocity extends Module {
             ((EntityVelocityUpdateS2CPacketAccessor) packet).setX((int) (velX * 8000 + mc.player.getVelocity().x * 8000));
             ((EntityVelocityUpdateS2CPacketAccessor) packet).setY((int) (velY * 8000 + mc.player.getVelocity().y * 8000));
             ((EntityVelocityUpdateS2CPacketAccessor) packet).setZ((int) (velZ * 8000 + mc.player.getVelocity().z * 8000));
+            
         }
     }
 
