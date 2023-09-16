@@ -16,6 +16,7 @@ import meteordevelopment.meteorclient.events.game.GameLeftEvent;
 import meteordevelopment.meteorclient.events.game.SendMessageEvent;
 import meteordevelopment.meteorclient.events.packets.ContainerSlotUpdateEvent;
 import meteordevelopment.meteorclient.events.packets.InventoryEvent;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.packets.PlaySoundPacketEvent;
 import meteordevelopment.meteorclient.events.world.ChunkDataEvent;
 import meteordevelopment.meteorclient.mixininterface.IExplosionS2CPacket;
@@ -29,6 +30,8 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.world.chunk.WorldChunk;
 import org.spongepowered.asm.mixin.Final;
@@ -38,6 +41,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Iterator;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class ClientPlayNetworkHandlerMixin {
@@ -152,5 +157,11 @@ public abstract class ClientPlayNetworkHandlerMixin {
             client.inGameHud.getChatHud().addToMessageHistory(message);
             ci.cancel();
         }
+    }
+    //@Inject(method = "onBundle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/Packet;apply(Lnet/minecraft/network/listener/PacketListener;)V", shift = At.Shift.AFTER))
+    @Inject(method = "onBundle", at = @At("TAIL"))
+    private void onBundle_onApply(BundleS2CPacket bundle, CallbackInfo ci){
+        for (Iterator<Packet<ClientPlayPacketListener>> it = bundle.getPackets().iterator(); it.hasNext(); )
+            MeteorClient.EVENT_BUS.post(PacketEvent.Received.get(it.next()));
     }
 }

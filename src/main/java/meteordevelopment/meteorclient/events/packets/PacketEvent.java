@@ -21,6 +21,17 @@ public class PacketEvent {
         }
     }
 
+    public static class Received {
+        private static final Received INSTANCE = new Received();
+
+        public Packet<?> packet;
+
+        public static Received get(Packet<?> packet) {
+            INSTANCE.packet = packet;
+            return INSTANCE;
+        }
+    }
+
     public static class Send extends Cancellable {
         private static final Send INSTANCE = new Send();
 

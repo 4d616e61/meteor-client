@@ -117,6 +117,7 @@
     "MobSpawnerBlockEntityRendererMixin",
     "MouseMixin",
     "MultiplayerScreenMixin",
+    "NetworkThreadUtilsMixin",
     "PacketByteBufMixin",
     "ParticleManagerMixin",
     "PlayerArmorSlotMixin",

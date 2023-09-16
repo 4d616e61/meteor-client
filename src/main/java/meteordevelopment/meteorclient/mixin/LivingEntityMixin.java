@@ -10,6 +10,7 @@ import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.entity.DamageEvent;
 import meteordevelopment.meteorclient.events.entity.player.CanWalkOnFluidEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.movement.AutoHighwayElytrafly;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFlightModes;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFly;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.modes.Bounce;
@@ -106,6 +107,9 @@ public abstract class LivingEntityMixin extends Entity {
     private boolean isFallFlyingHook(boolean original) {
         if ((Object) this == mc.player && Modules.get().get(ElytraFly.class).canPacketEfly()) {
             return true;
+        }
+        if ((Object) this == mc.player && Modules.get().get(AutoHighwayElytrafly.class).shouldForceStopElytrafly()) {
+            return false;
         }
 
         return original;

@@ -13,7 +13,9 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFly;
 import meteordevelopment.meteorclient.utils.Utils;
+import meteordevelopment.meteorclient.utils.misc.input.Input;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.EnumMap;
@@ -162,6 +164,7 @@ public class AutoHighwayElytrafly extends Module {
     private boolean playerIsStuck = false;
     private boolean startedUnstuck = false;
     private int velocityBelowThresholdTicks = 0;
+    boolean forceStopElytrafly = false;
 
     private int xOrigin = 0;
     private int zOrigin = 0;
@@ -271,6 +274,10 @@ public class AutoHighwayElytrafly extends Module {
     private boolean isDiagonal(Vec3d vec){
         return (vec.x != 0 && vec.z != 0);
     }
+    private void setPressed(KeyBinding key, boolean pressed) {
+        key.setPressed(pressed);
+        Input.setKeyState(key, pressed);
+    }
     //endregion
 
     //region StuckChecks
@@ -310,7 +317,10 @@ public class AutoHighwayElytrafly extends Module {
 
 
     private void checkStuck() {
+        boolean lastStuck = playerIsStuck;
         playerIsStuck = checkStuckPosition() || checkStuckVelocity() || checkPlayerPosBounds();
+        if(playerIsStuck && !lastStuck)
+            setPressed(mc.options.jumpKey, false);
 
     }
     private void resetStuckDetection(){
@@ -324,6 +334,9 @@ public class AutoHighwayElytrafly extends Module {
         playerIsStuck = false;
         executedCommand = false;
 
+    }
+    public boolean shouldForceStopElytrafly() {
+        return forceStopElytrafly;
     }
 
 
@@ -342,6 +355,8 @@ public class AutoHighwayElytrafly extends Module {
 
     private void resolveStuck() {
         toggleEfly(false);
+        mc.player.stopFallFlying();
+        forceStopElytrafly = true;
         if(mc.player.isFallFlying())
             return;
 
@@ -362,12 +377,20 @@ public class AutoHighwayElytrafly extends Module {
         }
         //unstuck ended
         if(!baritoneIsPathing()){
+            //if player still out of bounds, redo pathing
+            if(checkPlayerPosBounds())
+            {
+                startedUnstuck = false;
+                executedCommand = false;
+                return;
+            }
             info("Player stuck resolved.");
             startedUnstuck = false;
             playerIsStuck = false;
             executedCommand = false;
             toggleEfly(true);
             resetStuckDetection();
+            forceStopElytrafly = false;
         }
 
     }
@@ -416,6 +439,7 @@ public class AutoHighwayElytrafly extends Module {
             resolveStuck();
             return;
         }
+        forceStopElytrafly = false;
         lockRotation();
         toggleEfly(true);
         checkStuck();
@@ -435,6 +459,7 @@ public class AutoHighwayElytrafly extends Module {
         baritoneStop();
         toggleEfly(false);
         resetAll();
+        forceStopElytrafly = false;
     }
 
 

@@ -68,6 +68,8 @@ public class ElytraFlightMode {
 
     public void onPacketReceive(PacketEvent.Receive event) {
     }
+    public void onPacketReceived(PacketEvent.Received event) {
+    }
 
     public void onPlayerMove() {
     }
