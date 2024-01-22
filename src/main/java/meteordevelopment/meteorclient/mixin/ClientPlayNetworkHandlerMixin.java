@@ -20,6 +20,7 @@ import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.packets.PlaySoundPacketEvent;
 import meteordevelopment.meteorclient.events.world.ChunkDataEvent;
 import meteordevelopment.meteorclient.mixininterface.IExplosionS2CPacket;
+import meteordevelopment.meteorclient.pathing.BaritoneUtils;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.Velocity;
@@ -88,7 +89,7 @@ public abstract class ClientPlayNetworkHandlerMixin extends ClientCommonNetworkH
     }
 
     // the server sends a GameJoin packet after the reconfiguration phase
-    @Inject(method = "onEnterReconfiguration", at = @At("HEAD"))
+    @Inject(method = "onEnterReconfiguration", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkThreadUtils;forceMainThread(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/listener/PacketListener;Lnet/minecraft/util/thread/ThreadExecutor;)V", shift = At.Shift.AFTER))
     private void onEnterReconfiguration(EnterReconfigurationS2CPacket packet, CallbackInfo info) {
         MeteorClient.EVENT_BUS.post(GameLeftEvent.get());
     }
@@ -145,7 +146,7 @@ public abstract class ClientPlayNetworkHandlerMixin extends ClientCommonNetworkH
     private void onSendChatMessage(String message, CallbackInfo ci) {
         if (ignoreChatMessage) return;
 
-        if (!message.startsWith(Config.get().prefix.get()) && !message.startsWith(BaritoneAPI.getSettings().prefix.value)) {
+        if (!message.startsWith(Config.get().prefix.get()) && (BaritoneUtils.IS_AVAILABLE || !message.startsWith(BaritoneUtils.getPrefix()))) {
             SendMessageEvent event = MeteorClient.EVENT_BUS.post(SendMessageEvent.get(message));
 
             if (!event.isCancelled()) {
