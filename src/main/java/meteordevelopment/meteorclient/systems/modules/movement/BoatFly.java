@@ -27,6 +27,8 @@ import org.joml.Vector3f;
 import meteordevelopment.meteorclient.mixin.PlayerMoveC2SPacketAccessor;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
+import java.lang.reflect.Constructor;
+
 public class BoatFly extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -167,7 +169,16 @@ public class BoatFly extends Module {
     }
 
     private VehicleMoveC2SPacket createPacket(double x, double y, double z, float yaw, float pitch) {
-        return new VehicleMoveC2SPacket(createPacketData(x, y, z, yaw, pitch));
+        try{
+            Constructor<VehicleMoveC2SPacket> constructor = VehicleMoveC2SPacket.class.getDeclaredConstructor(PacketByteBuf.class);
+            constructor.setAccessible(true);
+            return constructor.newInstance(createPacketData(x, y, z, yaw, pitch));
+        }
+        catch(Exception e) {
+            //should not happen
+            return new VehicleMoveC2SPacket(null);
+        }
+        
     }
 
     private PacketByteBuf createPacketData(double x, double y, double z, float yaw, float pitch) {

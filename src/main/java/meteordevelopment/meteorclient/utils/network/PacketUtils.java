@@ -8,7 +8,7 @@ package meteordevelopment.meteorclient.utils.network;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Lifecycle;
 import io.netty.buffer.Unpooled;
-import meteordevelopment.meteorclient.utils.misc.MeteorIdentifier;
+//import meteordevelopment.meteorclient.utils.misc.MeteorIdentifier;
 import net.minecraft.network.PacketByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
@@ -23,6 +23,9 @@ import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
 import org.jetbrains.annotations.NotNull;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -473,7 +476,8 @@ public class PacketUtils {
     public static int getPacketSize(Packet<?> packet)
     {
         PacketByteBuf byteBuf = new PacketByteBuf(Unpooled.buffer());
-        packet.write(byteBuf);
+        //TODO: make this work again
+        //packet.write(byteBuf);
         //SHOULD work
         return byteBuf.writerIndex();
     }
@@ -625,19 +629,22 @@ public class PacketUtils {
             }
 
             for (Field f : clazz.getDeclaredFields()) {
+                
                 if (Modifier.isFinal(f.getModifiers()) && Modifier.isStatic(f.getModifiers()))
                     continue; // constant
 
                 if (!f.canAccess(packet))
                     f.setAccessible(true);
 
-                @Nullable Object value = f.get(Modifier.isStatic(f.getModifiers()) ? null : packet);
+                //@Nullable 
+                Object value = f.get(Modifier.isStatic(f.getModifiers()) ? null : packet);
                 values.add(Objects.toString(value));
             }
 
             return String.join(" ", packetName, values.toString());
         } catch (Exception e) {
-            error("Cannot construct packet values string", e);
+            
+            //error("Cannot construct packet values string", e);
             return packetName;
         }
     }

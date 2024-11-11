@@ -171,7 +171,7 @@ public abstract class ClientPlayNetworkHandlerMixin extends ClientCommonNetworkH
     //@Inject(method = "onBundle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/Packet;apply(Lnet/minecraft/network/listener/PacketListener;)V", shift = At.Shift.AFTER))
     @Inject(method = "onBundle", at = @At("TAIL"))
     private void onBundle_onApply(BundleS2CPacket bundle, CallbackInfo ci){
-        for (Iterator<Packet<ClientPlayPacketListener>> it = bundle.getPackets().iterator(); it.hasNext(); )
+        for (Iterator<Packet<? super ClientPlayPacketListener>> it = bundle.getPackets().iterator(); it.hasNext(); )
             MeteorClient.EVENT_BUS.post(PacketEvent.Received.get(it.next()));
     }
 }

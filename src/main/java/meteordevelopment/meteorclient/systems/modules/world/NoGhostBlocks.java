@@ -67,6 +67,7 @@ public class NoGhostBlocks extends Module {
 
             event.cancel();
         }
+    }
 
 
 
