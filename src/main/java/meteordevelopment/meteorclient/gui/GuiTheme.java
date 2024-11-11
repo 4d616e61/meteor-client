@@ -33,7 +33,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -115,7 +114,7 @@ public abstract class GuiTheme implements ISerializable<GuiTheme> {
 
     public abstract <T> WDropdown<T> dropdown(T[] values, T value);
     public <T extends Enum<?>> WDropdown<T> dropdown(T value) {
-        Class<?> klass = value.getClass();
+        Class<?> klass = value.getDeclaringClass();
         T[] values = (T[]) klass.getEnumConstants();
         return dropdown(values, value);
     }

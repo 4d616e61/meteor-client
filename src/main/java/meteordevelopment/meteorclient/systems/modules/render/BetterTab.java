@@ -3,7 +3,7 @@
  * Copyright (c) Meteor Development.
  */
 
-package meteordevelopment.meteorclient.systems.modules.misc;
+package meteordevelopment.meteorclient.systems.modules.render;
 
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.config.Config;
@@ -80,7 +80,7 @@ public class BetterTab extends Module {
 
 
     public BetterTab() {
-        super(Categories.Misc, "better-tab", "Various improvements to the tab list.");
+        super(Categories.Render, "better-tab", "Various improvements to the tab list.");
     }
 
     public Text getPlayerName(PlayerListEntry playerListEntry) {
