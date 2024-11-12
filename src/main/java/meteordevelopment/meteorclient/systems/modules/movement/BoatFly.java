@@ -229,7 +229,7 @@ public class BoatFly extends Module {
         needsReset = needsReset || (System.currentTimeMillis() - timeAtReset >= resetTime.get());
         if(needsReset){
             if(!resetSent){
-                info("RESETTING!");
+                //info("RESETTING!");
                 mc.getNetworkHandler().sendPacket(new PlayerInputC2SPacket(0, 0, false, true));
                 resetAcknowledged = false;
                 resetSent = true;
