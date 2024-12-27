@@ -9,6 +9,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import meteordevelopment.meteorclient.mixin.BufferRendererAccessor;
 import meteordevelopment.meteorclient.mixininterface.ICapabilityTracker;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
@@ -16,7 +17,6 @@ import org.lwjgl.BufferUtils;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.util.List;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static org.lwjgl.opengl.GL32C.*;
@@ -128,7 +128,7 @@ public class GL {
     }
 
     public static void shaderSource(int shader, String source) {
-        GlStateManager.glShaderSource(shader, List.of(source));
+        GlStateManager.glShaderSource(shader, source);
     }
 
     public static String compileShader(int shader) {
@@ -237,23 +237,23 @@ public class GL {
 
     public static void clear(int mask) {
         GlStateManager._clearColor(0, 0, 0, 1);
-        GlStateManager._clear(mask,false);
+        GlStateManager._clear(mask);
     }
 
     // State
 
     public static void saveState() {
-        depthSaved = DEPTH.get();
-        blendSaved = BLEND.get();
-        cullSaved = CULL.get();
-        scissorSaved = SCISSOR.get();
+        depthSaved = DEPTH.meteor$get();
+        blendSaved = BLEND.meteor$get();
+        cullSaved = CULL.meteor$get();
+        scissorSaved = SCISSOR.meteor$get();
     }
 
     public static void restoreState() {
-        DEPTH.set(depthSaved);
-        BLEND.set(blendSaved);
-        CULL.set(cullSaved);
-        SCISSOR.set(scissorSaved);
+        DEPTH.meteor$set(depthSaved);
+        BLEND.meteor$set(blendSaved);
+        CULL.meteor$set(cullSaved);
+        SCISSOR.meteor$set(scissorSaved);
 
         disableLineSmooth();
     }
@@ -296,8 +296,8 @@ public class GL {
     }
 
     public static void bindTexture(Identifier id) {
-        GlStateManager._activeTexture(GL_TEXTURE0);
-        mc.getTextureManager().bindTexture(id);
+        AbstractTexture texture = mc.getTextureManager().getTexture(id);
+        bindTexture(texture.getGlId(), 0);
     }
 
     public static void bindTexture(int i, int slot) {

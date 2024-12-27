@@ -90,7 +90,7 @@ public class ElytraFlightMode {
         boolean jumpPressed = mc.options.jumpKey.isPressed();
 
         if (elytraFly.autoTakeOff.get() && jumpPressed) {
-            if (!lastJumpPressed && !mc.player.isFallFlying()) {
+            if (!lastJumpPressed && !mc.player.isGliding()) {
                 jumpTimer = 0;
                 incrementJumpTimer = true;
             }
@@ -109,7 +109,7 @@ public class ElytraFlightMode {
     }
 
     public void handleAutopilot() {
-        if (!mc.player.isFallFlying()) return;
+        if (!mc.player.isGliding()) return;
 
         if (elytraFly.autoPilot.get() && mc.player.getY() > elytraFly.autoPilotMinimumHeight.get() && elytraFly.flightMode.get() != ElytraFlightModes.Bounce) {
             mc.options.forwardKey.setPressed(true);

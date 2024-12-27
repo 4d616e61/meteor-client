@@ -5,8 +5,10 @@
 
 package meteordevelopment.meteorclient.mixininterface;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.gl.Framebuffer;
 
-public interface IExplosion {
-    void set(Vec3d pos, float power, boolean createFire);
+public interface IWorldRenderer {
+    void meteor$pushEntityOutlineFramebuffer(Framebuffer framebuffer);
+
+    void meteor$popEntityOutlineFramebuffer();
 }

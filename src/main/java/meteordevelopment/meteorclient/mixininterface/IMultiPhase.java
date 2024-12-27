@@ -5,9 +5,8 @@
 
 package meteordevelopment.meteorclient.mixininterface;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.render.RenderLayer;
 
-public interface IItemEntity {
-    Vec3d getRotation();
-    void setRotation(Vec3d rotation);
+public interface IMultiPhase {
+    RenderLayer.MultiPhaseParameters meteor$getParameters();
 }
